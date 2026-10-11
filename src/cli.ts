@@ -1,9 +1,12 @@
 import { Command } from "commander";
+import { printBanner } from "./ui/banner.js";
+import { requireApiKey } from "./config/env.js";
+import chalk from "chalk";
 
 export function createCli() {
   const program = new Command()
-    .name("daemon-cli")
-    .description("integrating ai-chats/features like Antigravity-CLI")
+    .name("Daemon-cli")
+    .description("Integrating AI-chats/features like Antigravity-CLI")
     .version("0.1.0");
 
   program
@@ -11,6 +14,34 @@ export function createCli() {
     .description("Greet")
     .action(() => {
       console.log("Hello from the cli");
+    });
+
+  program
+    .command("banner")
+    .description("Showing the welcome banner")
+    .action(() => {
+      printBanner();
+    });
+
+  program
+    .command("analyze")
+    .description("checking environment")
+    .action(async () => {
+      const { execa } = await import("execa");
+      const { stdout } = await execa("node", ["-v"]);
+      const majorVersion = Number(stdout.match(/^v(\d+)/)?.[1]);
+
+      if (!Number.isFinite(majorVersion) || majorVersion < 18) {
+        throw new Error("Node.js version should be 18 or higher");
+      }
+
+      const apiKey = requireApiKey();
+      if (!apiKey) {
+        throw new Error("API Key is not available");
+      }
+
+      console.log(chalk.green("✅ Node.js is >= 18"));
+      console.log(chalk.green("✅ API key is set"));
     });
 
   program.action(() => {
